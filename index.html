@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Batangas Travel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  <style>
+    /* === FLASH MESSAGES === */
+    .flashes {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      z-index: 9999;
+    }
+    .flashes li {
+      background-color: #ff4d4d;
+      color: white;
+      padding: 12px 20px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: slideIn 0.4s ease-out;
+      font-weight: bold;
+      max-width: 300px;
+    }
+    .flashes li.success {
+      background-color: #4CAF50;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0%); opacity: 1; }
+    }
+
+    /* === AUTH PANEL === */
+    .auth-panel {
+      background-color: rgba(80,80,80,0.8);
+      color: white;
+      padding: 20px;
+      position: fixed;
+      right: 0;
+      top: 0;
+      height: 100vh;
+      width: 320px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      overflow-y: auto;
+      z-index: 10;
+    }
+    .auth-panel.open {
+      transform: translateX(0);
+    }
+
+    /* === TABS === */
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #555;
+    }
+    .tab-button {
+      flex: 1;
+      background: none;
+      border: none;
+      padding: 10px 0;
+      color: #aaa;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: color 0.3s, border-bottom-color 0.3s;
+    }
+    .tab-button.active,
+    .tab-button:focus {
+      color: white;
+      border-bottom-color: #ffcc00;
+      outline: none;
+    }
+
+    /* === FORMS === */
+    .auth-panel form label {
+      font-weight: 600;
+    }
+    .auth-panel form input {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      background-color: white;
+      border: 1px solid #555;
+      color: black;
+      border-radius: 3px;
+    }
+    .auth-panel form button.btn {
+      background-color: #ffcc00;
+      color: black;
+      border: none;
+      padding: 10px 5px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 50rem;
+      width: 90%;
+      margin: 15px auto 0;
+      transition: all 0.3s ease;
+      display: block;
+    }
+    .auth-panel form button.btn:hover {
+      background-color: skyblue;
+      color: white;
+      transform: scale(1.02);
+    }
+
+    /* === CLOSE BUTTONS === */
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    /* === EXPLORE BUTTON FIX === */
+    #exploreBtn {
+      transition: all 0.3s ease;
+    }
+    #exploreBtn:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</head>
+<body>
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <ul class="flashes" role="alert" aria-live="assertive">
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Video Background -->
+  <video autoplay muted loop playsinline class="background-video">
+    <source src="{{ url_for('static', filename='images/0526.mp4') }}" type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
+
+  <header>
+    <div class="logo-title">
+      <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="Logo" class="logo" />
+      {% if user_email %}
+        <p>Welcome, {{ user_email }}! <a href="{{ url_for('logout') }}">Logout</a></p>
+      {% endif %}
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#" id="contactLink">Contact</a></li>
+        {% if not user_email %}
+          <li><a href="#" id="loginLink">Login/Signup</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero-content">
+      <h2>Batangas Travel Booking</h2>
+      <p>Book amazing trips, from relaxing resorts to adventure tours — all in one site.</p>
+      <a href="{{ url_for('explore') }}" class="btn" id="exploreBtn">Explore Destinations</a>
+    </section>
+  </main>
+
+  <!-- Contact Panel -->
+  <div
+    id="contactPanel"
+    class="contact-panel"
+    aria-hidden="true"
+    tabindex="-1"
+    role="region"
+    aria-label="Contact information panel"
+  >
+    <button id="closeContact" class="close-btn" aria-label="Close Contact Panel" type="button">&times;</button>
+    <h3>Contact Us</h3>
+    <p><strong>Email:</strong> support@batangastravel.com</p>
+    <p><strong>Phone:</strong> +63 912 345 6789</p>
+    <p>
+      <strong>Address:</strong><br />
+      123 Batangas St., Batangas City, Philippines
+    </p>
+    <hr />
+    <h4>Operating Hours</h4>
+    <p>
+      Monday - Friday: 9:00 AM – 6:00 PM<br />
+      Saturday: 10:00 AM – 4:00 PM<br />
+      Sunday: Closed
+    </p>
+    <hr />
+    <h4>Follow Us</h4>
+    <p>
+      <a
+        href="https://facebook.com/batangastravel"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="color:#fff; text-decoration: underline;"
+      >Facebook</a
+      ><br />
+      <a
+        href="https://instagram.com/batangastravel"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="color:#fff; text-decoration: underline;"
+      >Instagram</a
+      ><br />
+      <a
+        href="https://twitter.com/batangastravel"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="color:#fff; text-decoration: underline;"
+      >Twitter</a>
+    </p>
+    <hr />
+    <h4>FAQs</h4>
+    <p>
+      <strong>Q:</strong> How do I book a trip?<br />
+      <strong>A:</strong> Click “Explore Destinations” and follow the booking steps.
+    </p>
+    <p>
+      <strong>Q:</strong> Can I cancel my booking?<br />
+      <strong>A:</strong> Yes, cancellation is allowed up to 48 hours before your trip.
+    </p>
+  </div>
+
+  <!-- Auth Panel -->
+  <aside id="authPanel" class="auth-panel">
+    <button id="closeAuth" class="close-btn">&times;</button>
+
+    <div class="tabs">
+      <button id="tabLogin" class="tab-button active">Login</button>
+      <button id="tabSignup" class="tab-button">Sign Up</button>
+    </div>
+
+    <div id="panelLogin">
+      <form id="loginForm" method="POST" action="{{ url_for('login') }}">
+        <label for="email">Email:</label><br />
+        <input type="email" id="email" name="loginEmail" required /><br /><br />
+        <label for="password">Password:</label><br />
+        <input type="password" id="password" name="loginPassword" required /><br /><br />
+        <button type="submit" class="btn">Login</button>
+      </form>
+    </div>
+
+    <div id="panelSignup" hidden>
+      <form id="signupForm" method="POST" action="{{ url_for('signup') }}">
+        <label for="signupEmail">Email:</label><br />
+        <input type="email" id="signupEmail" name="signupEmail" required /><br /><br />
+        <label for="signupPassword">Password:</label><br />
+        <input type="password" id="signupPassword" name="signupPassword" required /><br /><br />
+        <button type="submit" class="btn">Sign Up</button>
+      </form>
+    </div>
+  </aside>
+
+  <script>
+    // Flash messages auto-hide
+    setTimeout(() => {
+      const flash = document.querySelector('.flashes');
+      if (flash) {
+        flash.style.transition = 'opacity 0.5s ease-out';
+        flash.style.opacity = '0';
+        setTimeout(() => flash.remove(), 500);
+      }
+    }, 4000);
+
+    // Explore button with fallback
+    document.getElementById('exploreBtn').addEventListener('click', function (e) {
+      if (!window.location.href.includes('/explore')) {
+        window.location.href = "{{ url_for('explore') }}";
+      }
+    });
+
+    // Contact Panel
+    document.getElementById('contactLink').addEventListener('click', function (e) {
+      e.preventDefault();
+      document.getElementById('contactPanel').classList.add('open');
+      document.getElementById('authPanel').classList.remove('open');
+    });
+
+    document.getElementById('closeContact').addEventListener('click', () => {
+      document.getElementById('contactPanel').classList.remove('open');
+    });
+
+    // Auth Panel
+    document.getElementById('loginLink')?.addEventListener('click', function (e) {
+      e.preventDefault();
+      document.getElementById('authPanel').classList.add('open');
+      document.getElementById('contactPanel').classList.remove('open');
+      document.getElementById('tabLogin').click();
+    });
+
+    document.getElementById('closeAuth').addEventListener('click', () => {
+      document.getElementById('authPanel').classList.remove('open');
+    });
+
+    // Tab Switching
+    document.getElementById('tabLogin').addEventListener('click', () => {
+      document.getElementById('tabLogin').classList.add('active');
+      document.getElementById('tabSignup').classList.remove('active');
+      document.getElementById('panelLogin').hidden = false;
+      document.getElementById('panelSignup').hidden = true;
+    });
+
+    document.getElementById('tabSignup').addEventListener('click', () => {
+      document.getElementById('tabSignup').classList.add('active');
+      document.getElementById('tabLogin').classList.remove('active');
+      document.getElementById('panelSignup').hidden = false;
+      document.getElementById('panelLogin').hidden = true;
+    });
+  </script>
+</body>
+</html>
